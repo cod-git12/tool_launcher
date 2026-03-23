@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        .launcher {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .launcher-card {
+            background: #33415530;
+            padding: 20px 25px;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid transparent;
+            display: flex;
+            align-items: center;
+            text-align: left;
+            gap: 20px;
+        }
+
+        .launcher-card i {
+            font-size: 1.5rem;
+            color: #38bdf8;
+            width: 30px;
+            text-align: center;
+        }
+
+        .card-content {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .launcher-card span {
+            font-size: 1rem;
+            font-weight: 700;
+            display: block;
+            margin-bottom: 0;
+        }
+
+        .card-desc,
+        .launcher-card p {
+            font-size: 0.75rem;
+            color: #94a3b8;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        .launcher-card:hover {
+            transform: translateY(-5px);
+            background: #47556950;
+            border-color: #47556960;
+        }
+
+        h1 {
+            text-align: center;
+            font-weight: 800;
+            letter-spacing: -0.025em;
+            margin-bottom: 1.5rem;
+            color: var(--primary);
+        }
+
+        .container {
+            margin: 30px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>ツールランチャー</h1>
+        <div id="menu" class="content-section active">
+            <div class="launcher">
+                <div class="launcher-card" onclick="converter()">
+                    <i class="fas fa-exchange-alt"></i>
+                    <div class="card-content">
+                        <span>単位変換ツール</span>
+                        <p>単位を変換します</p>
+                    </div>
+                </div>
+
+                <div class="launcher-card" onclick="counter()">
+                    <i class="fas fa-file-lines"></i>
+                    <div class="card-content">
+                        <span>文字数カウンター</span>
+                        <p>文字数をカウントします</p>
+                    </div>
+                </div>
+
+                <div class="launcher-card" onclick="endecoder()">
+                    <i class="fas fa-code"></i>
+                    <div class="card-content">
+                        <span>エンコーダー・デコーダー</span>
+                        <p>文字をエンコード・デコードします</p>
+                    </div>
+                </div>
+
+                <div class="launcher-card" onclick="password()">
+                    <i class="fas fa-shield-halved"></i>
+                    <div class="card-content">
+                        <span>パスワードチェッカー</span>
+                        <p>パスワードの強度をチェックします</p>
+                    </div>
+                </div>
+
+                <div class="launcher-card" onclick="qrcode()">
+                    <i class="fas fa-qrcode"></i>
+                    <div class="card-content">
+                        <span>QRコードリーダー</span>
+                        <p>QRコードを読み取ります</p>
+                    </div>
+                </div>
+
+                <div class="launcher-card" onclick="tournament()">
+                    <i class="fas fa-qrcode"></i>
+                    <div class="card-content">
+                        <span>トーナメントビルダー</span>
+                        <p>トーナメントを作成します</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+</body>
+
+<script>
+    function converter() {
+        window.location.assign("tool/unit_converter.html");
+    }
+
+    function counter() {
+        window.location.assign("tool/character_counter.html");
+    }
+
+    function endecoder() {
+        window.location.assign("tool/encod_decod.html");
+    }
+
+    function password() {
+        window.location.assign("tool/password_checker.html");
+    }
+
+    function qrcode() {
+        window.location.assign("tool/qrcode_reader.html");
+    }
+
+    function tournament() {
+        window.location.assign("tool/Tournament.html");
+    }
+</script>
+
+</html>
