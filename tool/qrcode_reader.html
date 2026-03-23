@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <link rel="stylesheet" href="../all.css">
+    <link rel="stylesheet" href="css/qrcode.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/qrcode.js" defer></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Studio</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
+</head>
+
+<body>
+
+    <div class="header-nav">
+        <button class="back-button" onclick="location.href='../index.html'">
+            <i class="fas fa-arrow-left"></i> 戻る
+        </button>
+    </div>
+
+    <div class="container">
+        <h1>QR Studio</h1>
+
+        <div id="menu" class="content-section active">
+            <div class="launcher">
+                <div class="launcher-card" onclick="showSection('create-sec')">
+                    <i class="fas fa-pen-to-square"></i>
+                    <div class="card-content">
+                        <span>QR作成</span>
+                        <p>URLをQRに変換</p>
+                    </div>
+                </div>
+                <div class="launcher-card" onclick="showSection('camera-sec'); startCamera();">
+                    <i class="fas fa-camera"></i>
+                    <div class="card-content">
+                        <span>カメラ起動</span>
+                        <p>カメラで読み取る</p>
+                    </div>
+                </div>
+                <div class="launcher-card" onclick="document.getElementById('file-input').click()">
+                    <i class="fas fa-image"></i>
+                    <div class="card-content">
+                        <span>画像を選択</span>
+                        <p>画像から読み取る</p>
+                    </div>
+                </div>
+                <div class="launcher-card" onclick="location.reload()">
+                    <i class="fas fa-arrows-rotate"></i>
+                    <div class="card-content">
+                        <span>リセット</span>
+                        <p>画面を初期化</p>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="file-input" accept="image/*" style="display:none;">
+        </div>
+
+        <div id="create-sec" class="content-section">
+            <input type="text" id="qr-input" placeholder="https://example.com">
+            <button class="action-btn" onclick="generateQR()">QRコードを生成</button>
+            <div id="qrcode"></div>
+            <button id="download-btn" class="btn-download" onclick="downloadQR()">画像を保存する</button>
+            <div class="back-link" onclick="showSection('menu')">メニューに戻る</div>
+        </div>
+
+        <div id="camera-sec" class="content-section">
+            <video id="video" playsinline></video>
+            <canvas id="canvas" style="display:none;"></canvas>
+            <div class="result-area" id="scan-result">QRコードをスキャンしてください</div>
+            <div class="back-link" onclick="stopCamera(); showSection('menu')">キャンセル</div>
+        </div>
+    </div>
+
+</body>
+
+</html>

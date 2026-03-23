@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <link rel="stylesheet" href="../all.css">
+  <link rel="stylesheet" href="css/converter.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="js/converter.js" defer></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Unit Conversion Tool</title>
+</head>
+
+<body>
+
+  <div class="header-nav">
+    <button class="back-button" onclick="location.href='../index.html'">
+      <i class="fas fa-arrow-left"></i> 戻る
+    </button>
+  </div>
+
+  <header class="header">
+    <h2>単位変換機</h2>
+  </header>
+
+  <section class="controls-container">
+    <select id="categorySelector" onchange="switchCategory()">
+      <option value="length">長さ (Length)</option>
+      <option value="weight">重量 (Weight)</option>
+      <option value="area">面積 (Area)</option>
+      <option value="volume">体積 (Volume)</option>
+      <option value="temp">温度 (Temperature)</option>
+      <option value="time">時間 (Time)</option>
+      <option value="speed">速度 (Speed)</option>
+      <option value="data">データ容量 (Data Size)</option>
+      <option value="speedData">通信速度 (Data Rate)</option>
+      <option value="energy">エネルギー (Energy)</option>
+      <option value="freq">周波数 (Frequency)</option>
+      <option value="press">圧力 (Pressure)</option>
+      <option value="angle">平面角 (Angle)</option>
+      <option value="fuel">燃費 (Fuel Economy)</option>
+      <option value="currency">為替 (Currency)</option>
+    </select>
+
+    <div id="modeSelector" class="mode-selector" style="display: none">
+      <button id="btnNormal" class="mode-btn active-normal" onclick="changeMode('normal')">通常変換</button>
+      <button id="btnMixed" class="mode-btn" onclick="changeMode('mixed')">合算計算</button>
+    </div>
+
+    <div class="rt-setting">
+      <label style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        <input type="checkbox" id="rtEnabled" checked onchange="toggleRT()" />
+        <strong>リアルタイム変換</strong>
+      </label>
+      <button id="calcBtn" onclick="manualCalculate()">⚡ 実行</button>
+    </div>
+  </section>
+
+  <div id="mixedInputArea"></div>
+
+  <main class="container">
+    <div id="modeInfo" class="info-msg">💡1つの項目を入力すると、他の単位へ一斉に変換します。</div>
+
+    <div id="rateBox" class="currency-setting">
+      <strong>為替レート設定:</strong>
+      1$ = <input type="number" id="usdRate" value="150" style="width: 70px" /> 円 ／
+      1€ = <input type="number" id="eurRate" value="160" style="width: 70px" /> 円
+    </div>
+
+    <div id="unitGrid" class="grid normal-mode"></div>
+
+    <button id="clearBtn" onclick="clearAll()">すべての数値をリセット</button>
+  </main>
+
+</body>
+
+</html>

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <link rel="stylesheet" href="../all.css">
+    <link rel="stylesheet" href="css/counter.css">
+    <script src="js/counter.js" defer></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <meta charset="UTF-8">
+    <title>Character Counter</title>
+</head>
+
+<body>
+    <div class="header-nav">
+        <button class="back-button" onclick="location.href='../index.html'">
+            <i class="fas fa-arrow-left"></i> 戻る
+        </button>
+    </div>
+
+    <h2>文字数カウンター</h2>
+    <p style="font-size: 12px; color: #666;">※ <b>Ctrl + F</b> で検索窓にジャンプします</p>
+
+    <div class="editor-container">
+        <div id="backdrop" class="backdrop"></div>
+        <textarea id="txt" placeholder="ここに文章を入力または貼り付けてください..."></textarea>
+    </div>
+
+    <div class="search-box">
+        <strong>検索:</strong>
+        <input type="text" id="targetWord" placeholder="文字を入力して検索...">
+        <span>一致: <b id="wordCount" style="color:red">0</b> 件</span>
+    </div>
+
+    <div class="grid" id="statsGrid">
+        <div class="card"><span class="label">文字数</span><span class="val"><span id="c1">0</span><span
+                    class="unit">文字</span></span></div>
+        <div class="card"><span class="label">改行除く</span><span class="val"><span id="c2">0</span><span
+                    class="unit">文字</span></span></div>
+        <div class="card"><span class="label">改行・空白除く</span><span class="val"><span id="c3">0</span><span
+                    class="unit">文字</span></span></div>
+        <div class="card"><span class="label">行数</span><span class="val"><span id="c4">0</span><span
+                    class="unit">行</span></span></div>
+        <div class="card"><span class="label">原稿用紙(400字)</span><span class="val"><span id="c5">0</span><span
+                    class="unit">枚</span></span></div>
+        <div class="card"><span class="label">異体字/サロゲート</span><span class="val"><span id="c6">0</span><span
+                    class="unit">文字</span></span></div>
+        <div class="card"><span class="label">UTF-8</span><span class="val"><span id="c7">0</span><span
+                    class="unit">byte</span></span></div>
+        <div class="card"><span class="label">UTF-16</span><span class="val"><span id="c8">0</span><span
+                    class="unit">byte</span></span></div>
+        <div class="card"><span class="label">Shift-JIS(概算)</span><span class="val"><span id="c9">0</span><span
+                    class="unit">byte</span></span></div>
+    </div>
+
+</body>
+
+</html>

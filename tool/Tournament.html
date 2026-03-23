@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <link rel="stylesheet" href="../all.css">
+  <link rel="stylesheet" href="css/tournament.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="js/tournament.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TOURNAMENT BUILDER</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;800;900&family=Noto+Sans+JP:wght@400;500;700&display=swap"
+    rel="stylesheet">
+</head>
+
+<body>
+
+  <a href="../index.html" class="floating-back">
+    <i class="fas fa-arrow-left"></i>
+  </a>
+
+  <div class="header">
+    <div class="logo">TOURNAMENT <span>BUILDER</span></div>
+    <div class="sep"></div>
+    <div class="header-actions">
+      <button class="btn btn-ghost" id="toggleBtn" onclick="toggleInput()">＋ 参加者を追加</button>
+      <button class="btn btn-green" onclick="shufflePlayers()">⇄ シャッフル</button>
+      <button class="btn btn-primary" onclick="buildTournament()">▶ トーナメント生成</button>
+      <button class="btn btn-ghost" onclick="resetWinners()">↺ 勝敗リセット</button>
+      <button class="btn btn-ghost" onclick="clearAll()" style="margin-left:auto">✕ 全消去</button>
+    </div>
+  </div>
+
+  <div class="input-dropdown" id="inputDropdown">
+    <div class="input-inner">
+      <div class="single-add">
+        <div class="field-label">1人ずつ追加</div>
+        <div class="row">
+          <input class="inp" type="text" id="singleInput" placeholder="名前を入力…">
+          <button class="btn btn-primary" onclick="addSingle()">追加</button>
+        </div>
+      </div>
+
+      <div class="bulk-add">
+        <div class="field-label">まとめて追加（改行区切り）</div>
+        <textarea id="bulkInput" placeholder="田中&#10;鈴木&#10;佐藤&#10;…"></textarea>
+        <button class="btn btn-green" onclick="addBulk()">一括追加</button>
+      </div>
+
+      <div class="player-list-wrap">
+        <div class="field-label">参加者リスト（<span id="pCount">0</span>人）</div>
+        <div class="player-list" id="playerList"></div>
+        <div class="list-actions">
+          <button class="btn btn-ghost" style="font-size:11px;height:26px;padding:0 9px" onclick="shufflePlayers()">⇄
+            シャッフル</button>
+          <button class="btn btn-ghost" style="font-size:11px;height:26px;padding:0 9px;color:var(--accent2)"
+            onclick="clearAll()">全削除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-bar" id="statusBar" style="display:none">
+    <div class="stat">参加者 <span class="stat-val" id="sSP">0</span></div>
+    <div class="stat">ラウンド <span class="stat-val" id="sRD">0</span></div>
+    <div class="stat">試合 <span class="stat-val" id="sMT">0</span></div>
+    <div class="stat">進行 <span class="stat-val" id="sPG">0</span>/<span class="stat-val" id="sTL">0</span></div>
+    <div class="progress-bar">
+      <div class="progress-fill" id="progFill"></div>
+    </div>
+  </div>
+
+  <div id="main">
+    <div class="empty-state" id="emptyState">
+      <div class="empty-big">VS</div>
+      <div class="empty-sub">参加者を追加してトーナメントを生成しましょう</div>
+      <div class="empty-arrow">▲ 上のボタンから参加者を追加</div>
+    </div>
+    <div id="bracket" style="display:none"></div>
+  </div>
+
+  <div id="toast"></div>
+
+</body>
+
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <link rel="stylesheet" href="../all.css">
+    <link rel="stylesheet" href="css/encoder.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="js/decoder.js" defer></script>
+    <meta charset="UTF-8">
+    <title>Encoder / Decoder</title>
+</head>
+
+<body>
+
+    <div class="header-nav">
+        <button class="back-button" onclick="location.href='../index.html'">
+            <i class="fas fa-arrow-left"></i> 戻る
+        </button>
+    </div>
+
+    <h2>エンコーダー / デコーダー</h2>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('encode')">エンコード（変換）</div>
+        <div class="tab" onclick="showTab('decode')">デコード（復元）</div>
+    </div>
+
+    <div class="container">
+        <div id="encode" class="content active">
+            <label>テキストを入力</label>
+            <textarea id="input" class="main-input" placeholder="ここに文章を入力すると、各形式に自動変換されます..."></textarea>
+
+            <div class="grid">
+                <div class="card"><label>Hex (16進数) <button class="copy-btn"
+                            onclick="copy('hex')">Copy</button></label><textarea id="hex" readonly></textarea></div>
+                <div class="card"><label>Unicode (\uXXXX) <button class="copy-btn"
+                            onclick="copy('unicode')">Copy</button></label><textarea id="unicode" readonly></textarea>
+                </div>
+                <div class="card"><label>数値文字参照 (10進) <button class="copy-btn"
+                            onclick="copy('decE')">Copy</button></label><textarea id="decE" readonly></textarea></div>
+                <div class="card"><label>数値文字参照 (16進) <button class="copy-btn"
+                            onclick="copy('hexE')">Copy</button></label><textarea id="hexE" readonly></textarea></div>
+                <div class="card"><label>Base64 <button class="copy-btn"
+                            onclick="copy('b64')">Copy</button></label><textarea id="b64" readonly></textarea></div>
+                <div class="card"><label>URL Encode <button class="copy-btn"
+                            onclick="copy('url')">Copy</button></label><textarea id="url" readonly></textarea></div>
+            </div>
+        </div>
+
+        <div id="decode" class="content">
+            <label>復元したいコードをいずれかの欄に貼り付けてください</label>
+            <div class="grid">
+                <div class="card"><label>Base64を復元</label><textarea id="d-b64"
+                        placeholder="例: 44GC44GE44GG44GI44GK"></textarea></div>
+                <div class="card"><label>実体参照を復元</label><textarea id="d-ent"
+                        placeholder="例: &#x3042;&#x3044;..."></textarea></div>
+                <div class="card"><label>Hexを復元</label><textarea id="d-hex"
+                        placeholder="例: e3 81 82 e3 81 84..."></textarea></div>
+                <div class="card"><label>URLエンコードを復元</label><textarea id="d-url"
+                        placeholder="例: %E3%81%82..."></textarea></div>
+            </div>
+            <div style="margin-top:20px;">
+                <label style="color:var(--primary)">復元結果 (Plain Text)<button class="copy-btn"
+                        onclick="copy('hex')">Copy</button></label>
+                <textarea id="result" class="main-input" readonly style="background:#f9f9f9;"></textarea>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>
