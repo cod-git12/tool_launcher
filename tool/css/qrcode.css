@@ -1,0 +1,58 @@
+#qrcode {
+    background: white;
+    padding: 20px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin: 0 auto 20px;
+    width: fit-content;
+    display: none;
+}
+
+#video {
+    width: 100%;
+    border-radius: 16px;
+    background: #000;
+    display: none;
+    margin-bottom: 15px;
+}
+
+.result-area {
+    background: #f1f5f9;
+    padding: 15px;
+    border-radius: 12px;
+    word-break: break-all;
+    margin-top: 15px;
+    border-left: 4px solid var(--primary);
+    font-size: 0.9rem;
+    color: var(--text);
+}
+
+.back-link {
+    display: block;
+    margin-top: 20px;
+    text-align: center;
+    color: var(--text-light);
+    cursor: pointer;
+    text-decoration: underline;
+    font-size: 0.85rem;
+}
+
+.btn-download {
+    background: #10b981;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+    display: none;
+    width: 100%;
+}
+
+.content-section {
+    display: none;
+}
+
+.content-section.active {
+    display: block;
+}

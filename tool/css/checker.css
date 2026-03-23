@@ -1,0 +1,121 @@
+:root {
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --success: #10b981;
+    --info: #3b82f6;
+}
+
+.input-box {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+input#pwInput {
+    width: 100%;
+    padding: 15px 100px 15px 15px;
+    font-size: 1.2rem;
+    font-family: monospace;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    box-sizing: border-box;
+    background: var(--bg);
+    color: var(--text);
+}
+
+.controls {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    gap: 5px;
+}
+
+.btn-icon {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text);
+    transition: 0.2s;
+}
+
+.btn-icon:hover {
+    background: #f1f5f9;
+}
+
+.analysis-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.stat-card {
+    background: var(--bg);
+    padding: 15px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    color: var(--text-light);
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+.meter-container {
+    margin: 20px 0;
+}
+
+.meter-track {
+    height: 12px;
+    background: var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+#meterFill {
+    height: 100%;
+    width: 0%;
+    transition: 0.5s ease;
+}
+
+.generator-panel {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f1f5f9;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+}
+
+#feedbackList {
+    margin-top: 15px;
+    color: var(--danger);
+    font-size: 0.85rem;
+    padding-left: 20px;
+    list-style-type: "⚠ ";
+}
+
+#toast {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #334155;
+    color: #fff;
+    padding: 10px 20px;
+    border-radius: 20px;
+    display: none;
+    z-index: 1000;
+    font-size: 0.9rem;
+}
