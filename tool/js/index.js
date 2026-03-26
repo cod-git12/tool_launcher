@@ -21,3 +21,7 @@ function qrcode() {
 function tournament() {
     window.location.assign("tool/Tournament.html");
 }
+
+function sourceviewer() {
+    window.location.assign("tool/source_viewer.html");
+}
