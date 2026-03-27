@@ -2,75 +2,173 @@
 <html lang="ja">
 
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Source Viewer - DebugTool</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="css/source.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css">
     <link rel="stylesheet"
         href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.css">
+
     <script src="js/source.js" defer></script>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Source Viewer</title>
 </head>
 
-<body>
+<body class="mode-landing">
     <div id="loader-overlay" class="loader-overlay">
         <div class="loader-content">
             <div class="spinner"></div>
-            <p id="loader-text">ソースを取得中...</p>
+            <p id="loader-text">解析中...</p>
             <div class="progress-container">
                 <div id="progress-bar" class="progress-bar"></div>
             </div>
         </div>
     </div>
 
-    <div class="header-nav">
-        <button class="back-button" onclick="location.href='../index.html'">
-            <i class="fas fa-arrow-left"></i> 戻る
-        </button>
+    <div id="landing-page" class="landing-page">
+        <div class="landing-content">
+            <div class="hero-section">
+                <h1 class="logo-large">Source<span>Viewer</span></h1>
+                <p>ウェブサイトやファイルを解析してソースを表示します</p>
+            </div>
+
+            <div class="launch-container">
+                <div class="launch-card">
+                    <div class="card-icon"><i class="fas fa-globe"></i></div>
+                    <h3>URLから解析</h3>
+                    <div class="input-group">
+                        <input type="text" id="landingUrlInput" placeholder="https://example.com">
+                        <button onclick="loadSite()"><i class="fas fa-bolt"></i></button>
+                    </div>
+                </div>
+
+                <div class="launch-card">
+                    <div class="card-icon"><i class="fas fa-file-code"></i></div>
+                    <h3>ファイル選択</h3>
+                    <label for="fileInput" class="upload-label">
+                        HTMLファイルを選択
+                        <input type="file" id="fileInput" accept=".html" onchange="handleFileUpload(event)">
+                    </label>
+                </div>
+
+                <div class="launch-card">
+                    <div class="card-icon"><i class="fas fa-folder-open"></i></div>
+                    <h3>フォルダー選択</h3>
+                    <label for="folderInput" class="upload-label">
+                        フォルダを選択
+                        <input type="file" id="folderInput" webkitdirectory directory multiple
+                            onchange="handleFolderUpload(event)">
+                    </label>
+                </div>
+            </div>
+
+            <div class="landing-footer">
+                <div class="footer-item">
+                    <i class="fas fa-code"></i>
+                    <span>ソース閲覧</span>
+                </div>
+                <div class="footer-item">
+                    <i class="far fa-eye"></i>
+                    <span>プレビュー</span>
+                </div>
+                <div class="footer-item">
+                    <i class="fas fa-sitemap"></i>
+                    <span>エクスプローラー</span>
+                </div>
+            </div>
+        </div>
+        <p id="version">v2.0.0</p>
     </div>
 
-    <header class="navbar">
-        <div class="logo">🔍 Debug<span>Tool</span></div>
-        <div class="search-bar">
-            <input type="text" id="urlInput" placeholder="https://example.com">
-            <button onclick="loadSite()" class="btn-primary">読み込み</button>
-        </div>
-        <div class="options">
-            <label class="switch">
-                <input type="checkbox" id="highlightToggle" onchange="updateView()">
-                <span class="slider"></span>
-            </label>
-            <span class="label-text">色付け</span>
-        </div>
-    </header>
+    <div id="main-tool" class="tool-page" style="display: none;">
+        <header class="navbar">
+            <div class="logo-wrap clickable" onclick="resetTool()">
+                <span class="logo">🔍 Debug<span>Tool</span></span>
+            </div>
 
-    <main class="main-layout">
-        <nav class="tab-wrapper">
-            <div class="tab-group main-tabs">
-                <button class="tab-btn active" id="tab-source" onclick="switchMainTab('source')">ソース表示</button>
-                <button class="tab-btn" id="tab-preview" onclick="switchMainTab('preview')">プレビュー</button>
+            <div class="options-group">
+                <div class="opt-item">
+                    <span class="opt-label">折り返し</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="wrapToggle" onchange="toggleWrap()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <div class="opt-item">
+                    <span class="opt-label">色付け</span>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="highlightToggle" checked onchange="updateView()">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+                <button class="btn-new-url" onclick="resetTool()">
+                    <i class="fas fa-plus"></i> 別のURLを入力
+                </button>
             </div>
-            <div id="subTabContainer" class="tab-group sub-tabs">
-                <button class="sub-tab-btn active" onclick="switchSubTab('all')">ALL</button>
-                <button class="sub-tab-btn" onclick="switchSubTab('html')">HTML</button>
-                <button class="sub-tab-btn" onclick="switchSubTab('css')">CSS</button>
-                <button class="sub-tab-btn" onclick="switchSubTab('js')">JS</button>
-            </div>
-        </nav>
+        </header>
 
-        <div class="view-container">
-            <div id="panel-source" class="panel active">
-                <pre class="line-numbers"><code id="code-display" class="language-html"></code></pre>
+        <main class="main-layout">
+            <div class="tab-area">
+                <div class="tab-group main-tabs">
+                    <button class="tab-btn active" id="tab-source" onclick="switchMainTab('source')">ソース表示</button>
+                    <button class="tab-btn" id="tab-preview" onclick="switchMainTab('preview')">プレビュー</button>
+                    <button class="tab-btn" id="tab-explorer" onclick="switchMainTab('explorer')">エクスプローラー</button>
+                </div>
+                <div id="subTabContainer" class="tab-group sub-tabs">
+                    <button class="sub-tab-btn active" onclick="switchSubTab('all')">ALL</button>
+                    <button class="sub-tab-btn" onclick="switchSubTab('html')">HTML</button>
+                    <button class="sub-tab-btn" onclick="switchSubTab('css')">CSS</button>
+                    <button class="sub-tab-btn" onclick="switchSubTab('js')">JS</button>
+                </div>
             </div>
-            <div id="panel-preview" class="panel">
-                <iframe id="previewFrame"></iframe>
+
+            <div class="view-container">
+                <div id="panel-source" class="panel active">
+                    <div class="code-scroll-box">
+                        <pre id="pre-container"
+                            class="line-numbers"><code id="code-display" class="language-html"></code></pre>
+                    </div>
+                </div>
+
+                <div id="panel-preview" class="panel">
+                    <iframe id="previewFrame" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
+                </div>
+
+                <div id="panel-explorer" class="panel">
+                    <div class="explorer-wrapper">
+                        <button id="sidebar-open-btn" class="sidebar-open-btn" onclick="toggleSidebar()"
+                            style="display: none;">
+                            <i class="fas fa-chevron-right"></i>
+                        </button>
+
+                        <div id="file-tree" class="file-tree">
+                            <div class="explorer-header">
+                                <span>EXPLORER</span>
+                                <button class="sidebar-toggle-btn" onclick="toggleSidebar()">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                            </div>
+                            <div id="tree-content"></div>
+                        </div>
+
+                        <div class="file-content-viewer">
+                            <pre id="explorer-pre"
+                                class="line-numbers"><code id="explorer-code-display">ファイルを左から選択してください</code></pre>
+                        </div>
+                    </div>
+                </div>
+
             </div>
-        </div>
-    </main>
+        </main>
+    </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
