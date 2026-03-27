@@ -63,3 +63,13 @@ h1 {
 .container {
     margin: 30px;
 }
+
+#version {
+    position: fixed;
+    bottom: 10px;
+    right: 10px;
+    color: rgb(166, 166, 166);
+    font-size: 12px;
+    z-index: 1000;
+    pointer-events: none;
+}
