@@ -2,6 +2,9 @@ const gasUrl = "https://script.google.com/macros/s/AKfycbxpHlHa4FobKNtyos9EL_slY
 
 let siteData = { all: "", html: "", css: "", js: "", uploadedContent: "" };
 let currentMode = "all";
+let folderFiles = {};
+let baseUrl = "";
+let fileCache = {};
 
 const i18n = {
     ja: {
@@ -11,7 +14,30 @@ const i18n = {
         footer1: "ソース閲覧", footer2: "プレビュー", footer3: "エクスプローラー",
         wrap: "折り返し", highlight: "色付け", newUrl: "別のURLを入力",
         tab1: "ソース表示", tab2: "プレビュー", tab3: "エクスプローラー",
-        explorerHint: "ファイルを左から選択してください"
+        explorerHint: "ファイルを左から選択してください",
+        backBtn: "戻る",
+        loadingInit: "解析準備中...",
+        alertUrl: "URLを入力してください",
+        fetchHtml: "HTMLを取得中...",
+        fetchFail: "取得失敗しました。",
+        fetchFailBlock: "取得失敗",
+        loading: "読み込み中...",
+        noSource: "ソースがありません。",
+        parseHtml: "HTML構造を解析中...",
+        extractUrls: "外部リソースのURLを抽出中...",
+        fetchExt: "外部CSS/JSを取得中...",
+        loadLocal: "ローカルファイルをロード中...",
+        buildExp: "ファイルエクスプローラーを構築中...",
+        organizeCode: "ソースコードを整理中...",
+        renderPreview: "プレビュー画面をレンダリング中...",
+        ready: "準備が完了しました！",
+        parseError: "解析エラー: ",
+        libLoading: "ライブラリを読み込み中です...",
+        zipError: "ZIP作成に失敗しました。",
+        fileReading: "ファイルを読み込み中...",
+        folderScanning: "フォルダーをスキャン中...",
+        noExtCss: "/* 外部CSSなし */",
+        noExtJs: "// 外部JSなし"
     },
     en: {
         heroSub: "Analyze websites or files to view their source code",
@@ -20,7 +46,30 @@ const i18n = {
         footer1: "View Source", footer2: "Preview", footer3: "Explorer",
         wrap: "Word Wrap", highlight: "Highlight", newUrl: "New URL",
         tab1: "Source", tab2: "Preview", tab3: "Explorer",
-        explorerHint: "Please select a file from the left"
+        explorerHint: "Please select a file from the left",
+        backBtn: "Back",
+        loadingInit: "Preparing analysis...",
+        alertUrl: "Please enter a URL.",
+        fetchHtml: "Fetching HTML...",
+        fetchFail: "Failed to fetch.",
+        fetchFailBlock: "Fetch failed",
+        loading: "Loading...",
+        noSource: "No source available.",
+        parseHtml: "Parsing HTML structure...",
+        extractUrls: "Extracting external URLs...",
+        fetchExt: "Fetching external CSS/JS...",
+        loadLocal: "Loading local files...",
+        buildExp: "Building file explorer...",
+        organizeCode: "Organizing source code...",
+        renderPreview: "Rendering preview...",
+        ready: "Ready!",
+        parseError: "Parsing Error: ",
+        libLoading: "Loading JSZip library...",
+        zipError: "Failed to create ZIP.",
+        fileReading: "Reading file...",
+        folderScanning: "Scanning folder...",
+        noExtCss: "/* No external CSS */",
+        noExtJs: "// No external JS"
     }
 };
 
@@ -29,6 +78,13 @@ function changeLanguage(lang) {
         const key = el.getAttribute('data-i18n');
         if (i18n[lang][key]) el.innerText = i18n[lang][key];
     });
+    updateView();
+}
+
+function t(key) {
+    const select = document.getElementById('langSelect');
+    const lang = select ? select.value : 'ja';
+    return i18n[lang] ? (i18n[lang][key] || key) : key;
 }
 
 async function fetchViaGas(url) {
@@ -37,7 +93,7 @@ async function fetchViaGas(url) {
         if (!r.ok) throw new Error();
         return await r.text();
     } catch (e) {
-        return `/* 取得失敗: ${url} */`;
+        return `/* ${t('fetchFailBlock')}: ${url} */`;
     }
 }
 
@@ -48,18 +104,18 @@ document.getElementById('landingUrlInput')?.addEventListener('keypress', (e) => 
 async function loadSite() {
     const lInput = document.getElementById('landingUrlInput');
     const urlInput = lInput ? lInput.value.trim() : "";
-    if (!urlInput) return alert("URLを入力してください");
+    if (!urlInput) return alert(t('alertUrl'));
 
     let targetUrl = urlInput.startsWith('http') ? urlInput : 'https://' + urlInput;
     const loader = document.getElementById('loader-overlay');
     loader.style.display = 'flex';
-    document.getElementById('loader-text').innerText = "HTMLを取得中...";
+    document.getElementById('loader-text').innerText = t('fetchHtml');
 
     try {
         const raw = await fetchViaGas(targetUrl);
         await processRawHtml(raw, targetUrl);
     } catch (e) {
-        alert("取得失敗しました。");
+        alert(t('fetchFail'));
         loader.style.display = 'none';
     }
 }
@@ -107,7 +163,7 @@ async function viewExplorerFile(url, element) {
     document.querySelectorAll('.tree-item').forEach(el => el.classList.remove('selected'));
     element.classList.add('selected');
 
-    display.textContent = "読み込み中...";
+    display.textContent = t('loading');
     const content = await fetchViaGas(url);
     display.textContent = content;
 
@@ -134,7 +190,7 @@ async function renderCode(contentOrUrl, isUrl = false) {
     const urlStr = String(contentOrUrl).toLowerCase();
     const isImage = /\.(png|jpe?g|gif|webp|svg)$/.test(urlStr);
 
-    target.textContent = "読み込み中...";
+    target.textContent = t('loading');
     let text = "";
 
     if (isUrl) {
@@ -160,7 +216,7 @@ async function renderCode(contentOrUrl, isUrl = false) {
         return;
     }
 
-    target.textContent = text || "ソースがありません。";
+    target.textContent = text || t('noSource');
 
     let lang = "language-html";
     if (urlStr.endsWith(".css") || (!isUrl && currentMode === "css")) lang = "language-css";
@@ -187,7 +243,7 @@ function updateView() {
     if (currentMode === "js") lang = "language-javascript";
 
     code.className = lang;
-    code.textContent = siteData[currentMode] || "ソースがありません。";
+    code.textContent = siteData[currentMode] || t('noSource');
 
     if (isHighlight) {
         Prism.highlightElement(code);
@@ -350,7 +406,7 @@ async function handleFileUpload(event) {
     if (!file) return;
     const loader = document.getElementById('loader-overlay');
     loader.style.display = 'flex';
-    document.getElementById('loader-text').innerText = "ファイルを読み込み中...";
+    document.getElementById('loader-text').innerText = t('fileReading');
     const reader = new FileReader();
     reader.onload = async (e) => {
         const rawHtml = e.target.result;
@@ -368,7 +424,7 @@ async function handleFolderUpload(event) {
     const loader = document.getElementById('loader-overlay');
     const loaderText = document.getElementById('loader-text');
     loader.style.display = 'flex';
-    loaderText.innerText = "フォルダーをスキャン中...";
+    loaderText.innerText = t('folderScanning');
 
     folderFiles = {};
     let indexHtmlContent = "";
@@ -467,7 +523,7 @@ async function processRawHtml(raw, baseUrl) {
     };
 
     try {
-        updateProgress(10, "HTML構造を解析中...");
+        updateProgress(10, t('parseHtml'));
         const parser = new DOMParser();
         const docObj = parser.parseFromString(raw, "text/html");
 
@@ -477,37 +533,64 @@ async function processRawHtml(raw, baseUrl) {
         let cssUrls = [];
 
         if (!isLocal) {
-            updateProgress(30, "外部リソースのURLを抽出中...");
+            updateProgress(30, t('extractUrls'));
             const scriptTags = Array.from(docObj.querySelectorAll('script[src]'));
             const styleTags = Array.from(docObj.querySelectorAll('link[rel="stylesheet"]'));
 
             jsUrls = [...new Set(scriptTags.map(tag => new URL(tag.getAttribute('src'), baseUrl).href))];
             cssUrls = [...new Set(styleTags.map(tag => new URL(tag.getAttribute('href'), baseUrl).href))];
 
-            updateProgress(50, "外部CSS/JSを取得中...");
-            const cssPromises = cssUrls.map(url => fetchViaGas(url).then(text => `/* --- External: ${url} --- */\n${text}`));
-            const jsPromises = jsUrls.map(url => fetchViaGas(url).then(text => `// --- External: ${url} ---\n${text}`));
+            updateProgress(50, t('fetchExt'));
+
+            fileCache = {};
+
+            const cssPromises = cssUrls.map(async url => {
+                const text = await fetchViaGas(url);
+                try {
+                    const u = new URL(url);
+                    let path = u.pathname.startsWith('/') ? u.pathname.substring(1) : u.pathname;
+                    if (!path || path.endsWith('/')) path += "style.css";
+                    fileCache[path] = text;
+                } catch (e) {
+                    fileCache[url.split('/').pop() || "style.css"] = text;
+                }
+                return `/* --- External: ${url} --- */\n${text}`;
+            });
+
+            const jsPromises = jsUrls.map(async url => {
+                const text = await fetchViaGas(url);
+                try {
+                    const u = new URL(url);
+                    let path = u.pathname.startsWith('/') ? u.pathname.substring(1) : u.pathname;
+                    if (!path || path.endsWith('/')) path += "script.js";
+                    fileCache[path] = text;
+                } catch (e) {
+                    fileCache[url.split('/').pop() || "script.js"] = text;
+                }
+                return `// --- External: ${url} ---\n${text}`;
+            });
 
             externalCssArr = await Promise.all(cssPromises);
             externalJsArr = await Promise.all(jsPromises);
+
         } else {
-            updateProgress(50, "ローカルファイルをロード中...");
+            updateProgress(50, t('loadLocal'));
         }
 
-        updateProgress(70, "ファイルエクスプローラーを構築中...");
+        updateProgress(70, t('buildExp'));
         if (baseUrl === "local-folder") {
             buildFolderExplorer();
         } else {
             buildExplorer(isLocal ? "UploadedFile" : baseUrl, jsUrls, cssUrls);
         }
 
-        updateProgress(80, "ソースコードを整理中...");
+        updateProgress(80, t('organizeCode'));
         let inlineCss = [...raw.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(m => m[1]).join("\n\n");
         let inlineJs = [...raw.matchAll(/<script(?![^>]*src)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]).join("\n\n");
 
         siteData.all = raw;
-        siteData.css = (externalCssArr.join("\n\n") || "/* 外部CSSなし */") + "\n\n/* --- Inline --- */\n\n" + inlineCss;
-        siteData.js = (externalJsArr.join("\n\n") || "// 外部JSなし") + "\n\n/* --- Inline --- */\n\n" + inlineJs;
+        siteData.css = (externalCssArr.join("\n\n") || t('noExtCss')) + "\n\n/* --- Inline --- */\n\n" + inlineCss;
+        siteData.js = (externalJsArr.join("\n\n") || t('noExtJs')) + "\n\n/* --- Inline --- */\n\n" + inlineJs;
         siteData.html = raw.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<script[^>]*>[\s\S]*?<\/script>/g, "");
 
         updateView();
@@ -515,7 +598,7 @@ async function processRawHtml(raw, baseUrl) {
         document.getElementById('main-tool').style.display = 'flex';
         document.body.className = "mode-tool";
 
-        updateProgress(90, "プレビュー画面をレンダリング中...");
+        updateProgress(90, t('renderPreview'));
         const frame = document.getElementById('previewFrame');
         const doc = frame.contentWindow.document;
         doc.open();
@@ -551,14 +634,14 @@ async function processRawHtml(raw, baseUrl) {
         doc.write(previewHtml + '<script src="https://cdn.jsdelivr.net/npm/eruda"></script><script>eruda.init(); eruda.show();</script>');
         doc.close();
 
-        updateProgress(100, "準備が完了しました！");
+        updateProgress(100, t('ready'));
         setTimeout(() => {
             document.getElementById('loader-overlay').style.display = 'none';
         }, 500);
 
     } catch (e) {
         console.error(e);
-        alert("解析エラー: " + e.message);
+        alert(t('parseError') + e.message);
         document.getElementById('loader-overlay').style.display = 'none';
     }
 }
@@ -574,25 +657,36 @@ dropZone.addEventListener('drop', (e) => {
 });
 
 async function downloadAllFiles() {
+    if (typeof JSZip === 'undefined') return alert(t('libLoading'));
+
     const zip = new JSZip();
-    const isLocal = Object.keys(folderFiles).length > 0;
+    const isLocal = typeof folderFiles !== 'undefined' && Object.keys(folderFiles).length > 0;
 
     if (isLocal) {
         for (const [path, content] of Object.entries(folderFiles)) {
             zip.file(path, content);
         }
     } else {
-        const folder = zip.folder("site_source");
-        folder.file("index.html", siteData.html || siteData.all);
-        folder.file("style.css", siteData.css);
-        folder.file("script.js", siteData.js);
+        zip.file("index.html", siteData.html || siteData.all);
+
+        for (const [path, content] of Object.entries(fileCache)) {
+            if (content && !content.startsWith('/* ' + i18n.ja.fetchFailBlock) && !content.startsWith('/* ' + i18n.en.fetchFailBlock)) {
+                zip.file(path, content);
+            }
+        }
     }
 
-    const blob = await zip.generateAsync({ type: "blob" });
-    const link = document.createElement('a');
-    link.href = URL.createObjectURL(blob);
-    link.download = "source_viewer_export.zip";
-    link.click();
+    try {
+        const blob = await zip.generateAsync({ type: "blob" });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = isLocal ? "project_folder.zip" : "analyzed_site.zip";
+        link.click();
+        URL.revokeObjectURL(link.href);
+    } catch (err) {
+        console.error("ZIP作成失敗:", err);
+        alert(t('zipError'));
+    }
 }
 
 function buildFolderExplorer() {
@@ -628,10 +722,7 @@ function buildFolderExplorer() {
 function renderTree(node, parent) {
     const item = document.createElement('div');
     item.className = `tree-item ${node.type}`;
-
-    if (node.open) {
-        item.classList.add('open');
-    }
+    if (node.open) item.classList.add('open');
 
     const icon = node.type === 'folder'
         ? '<i class="fas fa-chevron-right arrow"></i><i class="fas fa-folder"></i>'
@@ -643,7 +734,6 @@ function renderTree(node, parent) {
     if (node.type === 'folder') {
         const childBox = document.createElement('div');
         childBox.className = 'tree-children';
-
         childBox.style.display = node.open ? 'block' : 'none';
 
         item.onclick = (e) => {
@@ -651,8 +741,9 @@ function renderTree(node, parent) {
             const nowOpen = item.classList.toggle('open');
             childBox.style.display = nowOpen ? 'block' : 'none';
         };
-
-        Object.values(node.children).forEach(c => renderTree(c, childBox));
+        if (node.children) {
+            Object.values(node.children).forEach(c => renderTree(c, childBox));
+        }
         parent.appendChild(childBox);
     } else {
         item.onclick = (e) => {

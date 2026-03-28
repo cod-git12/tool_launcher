@@ -27,7 +27,7 @@
     <div id="loader-overlay" class="loader-overlay" style="display: none;">
         <div class="loader-content">
             <div class="spinner"></div>
-            <div id="loader-text">解析準備中...</div>
+            <div id="loader-text" data-i18n="loadingInit">解析準備中...</div>
 
             <div class="progress-container">
                 <div id="progress-bar" class="progress-fill"></div>
@@ -40,7 +40,7 @@
         <div class="landing-content">
             <div class="header-nav">
                 <button class="back-button" onclick="location.href='../index.html'">
-                    <i class="fas fa-arrow-left"></i> 戻る
+                    <i class="fas fa-arrow-left"></i> <span data-i18n="backBtn">戻る</span>
                 </button>
             </div>
 
@@ -94,7 +94,7 @@
                 </div>
             </div>
         </div>
-        <p id="version">v2.2.0</p>
+        <p id="version">v2.3.0</p>
     </div>
 
     <div id="main-tool" class="tool-page" style="display: none;">

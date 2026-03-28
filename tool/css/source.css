@@ -399,11 +399,6 @@ input:checked+.toggle-slider:before {
     color: #000;
 }
 
-.tree-item i {
-    width: 16px;
-    text-align: center;
-}
-
 .tree-folder {
     font-weight: 600;
     color: #444;
@@ -418,6 +413,21 @@ input:checked+.toggle-slider:before {
     width: 16px;
     text-align: center;
     color: #777;
+}
+
+.tree-item .arrow {
+    transition: transform 0.2s ease;
+    margin-right: 5px;
+    font-size: 0.8em;
+}
+
+.tree-item.open>.arrow {
+    transform: rotate(90deg);
+}
+
+.tree-item .fa-folder {
+    color: #f1c40f;
+    margin-right: 5px;
 }
 
 .file-content-viewer {
