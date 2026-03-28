@@ -5,6 +5,7 @@ let currentMode = "all";
 let folderFiles = {};
 let baseUrl = "";
 let fileCache = {};
+let exportFileName = "source_viewer_export";
 
 const i18n = {
     ja: {
@@ -107,6 +108,14 @@ async function loadSite() {
     if (!urlInput) return alert(t('alertUrl'));
 
     let targetUrl = urlInput.startsWith('http') ? urlInput : 'https://' + urlInput;
+
+    try {
+        const urlObj = new URL(targetUrl);
+        exportFileName = urlObj.hostname;
+    } catch (e) {
+        exportFileName = urlInput.replace(/[^a-z0-9.]/gi, '_');
+    }
+
     const loader = document.getElementById('loader-overlay');
     loader.style.display = 'flex';
     document.getElementById('loader-text').innerText = t('fetchHtml');
@@ -421,6 +430,11 @@ async function handleFolderUpload(event) {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
+    const rootName = files[0].webkitRelativePath.split('/')[0];
+    if (rootName) {
+        exportFileName = rootName;
+    }
+
     const loader = document.getElementById('loader-overlay');
     const loaderText = document.getElementById('loader-text');
     loader.style.display = 'flex';
@@ -680,7 +694,7 @@ async function downloadAllFiles() {
         const blob = await zip.generateAsync({ type: "blob" });
         const link = document.createElement('a');
         link.href = URL.createObjectURL(blob);
-        link.download = isLocal ? "project_folder.zip" : "analyzed_site.zip";
+        link.download = `${exportFileName}.zip`;
         link.click();
         URL.revokeObjectURL(link.href);
     } catch (err) {
