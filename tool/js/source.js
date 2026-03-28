@@ -3,6 +3,34 @@ const gasUrl = "https://script.google.com/macros/s/AKfycbxpHlHa4FobKNtyos9EL_slY
 let siteData = { all: "", html: "", css: "", js: "", uploadedContent: "" };
 let currentMode = "all";
 
+const i18n = {
+    ja: {
+        heroSub: "ウェブサイトやファイルを解析してソースを表示します",
+        urlTitle: "URLから解析", fileTitle: "ファイル選択", folderTitle: "フォルダー選択",
+        fileBtn: "HTMLファイルを選択", folderBtn: "フォルダを選択",
+        footer1: "ソース閲覧", footer2: "プレビュー", footer3: "エクスプローラー",
+        wrap: "折り返し", highlight: "色付け", newUrl: "別のURLを入力",
+        tab1: "ソース表示", tab2: "プレビュー", tab3: "エクスプローラー",
+        explorerHint: "ファイルを左から選択してください"
+    },
+    en: {
+        heroSub: "Analyze websites or files to view their source code",
+        urlTitle: "Analyze from URL", fileTitle: "File Select", folderTitle: "Folder Select",
+        fileBtn: "Select HTML File", folderBtn: "Select Folder",
+        footer1: "View Source", footer2: "Preview", footer3: "Explorer",
+        wrap: "Word Wrap", highlight: "Highlight", newUrl: "New URL",
+        tab1: "Source", tab2: "Preview", tab3: "Explorer",
+        explorerHint: "Please select a file from the left"
+    }
+};
+
+function changeLanguage(lang) {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (i18n[lang][key]) el.innerText = i18n[lang][key];
+    });
+}
+
 async function fetchViaGas(url) {
     try {
         const r = await fetch(`${gasUrl}?url=${encodeURIComponent(url)}`);
@@ -40,26 +68,37 @@ function buildExplorer(baseUrl, jsUrls, cssUrls) {
     const container = document.getElementById('tree-content');
     if (!container) return;
     container.innerHTML = "";
-    if (baseUrl === "local-file") {
-        createFolderElement(container, "Uploaded File", [{ name: "index.html", url: "local-file", type: "html" }]);
-    } else if (baseUrl === "local-folder") {
-        const files = Object.keys(folderFiles).map(path => ({
-            name: path,
-            url: path,
-            type: path.split('.').pop()
-        }));
-        createFolderElement(container, "Project Folder", files);
-    } else {
-        createFolderElement(container, "HTML", [{ name: "index.html", url: baseUrl, type: "html" }]);
-        if (cssUrls.length > 0) {
-            const cssFiles = cssUrls.map(url => ({ name: url.split('/').pop() || 'style.css', url: url, type: "css" }));
-            createFolderElement(container, "CSS Styles", cssFiles);
-        }
-        if (jsUrls.length > 0) {
-            const jsFiles = jsUrls.map(url => ({ name: url.split('/').pop() || 'script.js', url: url, type: "js" }));
-            createFolderElement(container, "Scripts", jsFiles);
-        }
+
+    const totalFiles = 1 + jsUrls.length + cssUrls.length;
+    const autoCollapse = totalFiles > 10;
+
+    let domain = "Website";
+    try { domain = new URL(baseUrl).hostname; } catch (e) { }
+    const root = { name: domain, type: "folder", children: {}, open: true };
+
+    function addPath(url, isMain = false) {
+        try {
+            const u = new URL(url);
+            let parts = u.pathname.split('/').filter(p => p);
+            if (parts.length === 0 || isMain) parts = ["index.html"];
+
+            let cur = root;
+            parts.forEach((part, i) => {
+                if (i === parts.length - 1) {
+                    cur.children[part] = { name: part, type: "file", url: url };
+                } else {
+                    if (!cur.children[part]) {
+                        cur.children[part] = { name: part, type: "folder", children: {}, open: !autoCollapse };
+                    }
+                    cur = cur.children[part];
+                }
+            });
+        } catch (e) { }
     }
+    addPath(baseUrl, true);
+    cssUrls.forEach(u => addPath(u));
+    jsUrls.forEach(u => addPath(u));
+    renderTree(root, container);
 }
 
 async function viewExplorerFile(url, element) {
@@ -89,26 +128,46 @@ async function renderCode(contentOrUrl, isUrl = false) {
     const mainPre = document.getElementById('pre-container');
     const target = isUrl ? explorerCode : mainCode;
     const parentPre = isUrl ? explorerPre : mainPre;
+
     if (!target) return;
+
+    const urlStr = String(contentOrUrl).toLowerCase();
+    const isImage = /\.(png|jpe?g|gif|webp|svg)$/.test(urlStr);
+
     target.textContent = "読み込み中...";
     let text = "";
+
     if (isUrl) {
         if (folderFiles && folderFiles[contentOrUrl]) {
             text = folderFiles[contentOrUrl];
         } else if (contentOrUrl === "local-file" || contentOrUrl === "local-folder" || contentOrUrl.includes("UploadedFile")) {
             text = siteData.uploadedContent;
         } else {
-            text = await fetchViaGas(contentOrUrl);
+            text = isImage ? contentOrUrl : await fetchViaGas(contentOrUrl);
         }
     } else {
         text = contentOrUrl;
     }
+
+    if (isImage && text) {
+        target.innerHTML = `
+            <div class="image-preview-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 40px; background: #f0f0f0; min-height: 100%;">
+                <img src="${text}" style="max-width: 90%; max-height: 70vh; box-shadow: 0 4px 20px rgba(0,0,0,0.15); border-radius: 4px; background: white;">
+                <div style="margin-top: 20px; color: #666; font-family: monospace; font-size: 0.9rem;">${contentOrUrl}</div>
+            </div>
+        `;
+        target.className = "";
+        return;
+    }
+
     target.textContent = text || "ソースがありません。";
+
     let lang = "language-html";
-    const urlStr = String(contentOrUrl).toLowerCase();
     if (urlStr.endsWith(".css") || (!isUrl && currentMode === "css")) lang = "language-css";
     else if (urlStr.endsWith(".js") || (!isUrl && currentMode === "js")) lang = "language-javascript";
+
     target.className = lang;
+
     if (document.getElementById('highlightToggle').checked && text) {
         Prism.highlightElement(target);
         setTimeout(() => {
@@ -305,88 +364,200 @@ async function handleFileUpload(event) {
 async function handleFolderUpload(event) {
     const files = event.target.files;
     if (!files || files.length === 0) return;
+
     const loader = document.getElementById('loader-overlay');
+    const loaderText = document.getElementById('loader-text');
     loader.style.display = 'flex';
-    document.getElementById('loader-text').innerText = "フォルダーを解析中...";
+    loaderText.innerText = "フォルダーをスキャン中...";
+
     folderFiles = {};
     let indexHtmlContent = "";
+
+    const imageRegex = /\.(png|jpe?g|gif|webp|svg)$/i;
+
     for (const file of files) {
         const path = file.webkitRelativePath;
-        const content = await file.text();
-        folderFiles[path] = content;
-        if (path.endsWith("index.html") && !indexHtmlContent) indexHtmlContent = content;
+
+        if (imageRegex.test(file.name)) {
+            const dataUrl = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.readAsDataURL(file);
+            });
+            folderFiles[path] = dataUrl;
+        } else {
+            const content = await file.text();
+            folderFiles[path] = content;
+
+            if (path.endsWith("index.html") && !indexHtmlContent) {
+                indexHtmlContent = content;
+            }
+        }
     }
+
     const firstPath = Object.keys(folderFiles)[0];
     const initialContent = indexHtmlContent || folderFiles[firstPath];
+
     siteData.uploadedContent = initialContent;
+
     await processRawHtml(initialContent, "local-folder");
 }
 
-function buildFolderExplorer(files) {
+function buildExplorer(baseUrl, jsUrls, cssUrls) {
     const container = document.getElementById('tree-content');
+    if (!container) return;
     container.innerHTML = "";
 
-    const sortedPaths = Array.from(files).map(f => f.webkitRelativePath).sort();
+    if (baseUrl === "local-file") {
+        const fileRoot = { name: "Uploaded File", type: "folder", children: { "index.html": { name: "index.html", type: "file", url: "local-file" } }, open: true };
+        renderTree(fileRoot, container);
+        return;
+    }
 
-    sortedPaths.forEach(path => {
-        const parts = path.split('/');
-        const fileName = parts.pop();
-        const folderName = parts.join('/') || "Root";
+    let domainName = "Website";
+    try { domainName = new URL(baseUrl).hostname; } catch (e) { }
 
-        const fileEl = document.createElement('div');
-        fileEl.className = 'tree-item tree-file';
-        fileEl.innerHTML = `<i class="${getFileIcon(fileName)}"></i> <span>${path}</span>`;
-        fileEl.onclick = () => {
-            document.querySelectorAll('.tree-item').forEach(i => i.classList.remove('selected'));
-            fileEl.classList.add('selected');
-            renderCode(path, true);
-        };
-        container.appendChild(fileEl);
-    });
+    const root = { name: domainName, type: "folder", children: {}, open: true };
+
+    function addPathToTree(targetUrl, isMainHtml = false) {
+        try {
+            const parsedUrl = new URL(targetUrl);
+            let parts = parsedUrl.pathname.split('/').filter(p => p);
+
+            if (parts.length === 0 || isMainHtml) {
+                parts = ["index.html"];
+            }
+
+            let current = root;
+            parts.forEach((part, index) => {
+                if (index === parts.length - 1) {
+                    let cleanName = part.split('?')[0];
+                    if (!cleanName) cleanName = "file";
+                    current.children[cleanName] = { name: cleanName, type: "file", url: targetUrl };
+                } else {
+                    if (!current.children[part]) {
+                        current.children[part] = { name: part, type: "folder", children: {}, open: true };
+                    }
+                    current = current.children[part];
+                }
+            });
+        } catch (e) {
+            let fallbackName = targetUrl.split('/').pop() || "unknown";
+            root.children[fallbackName] = { name: fallbackName, type: "file", url: targetUrl };
+        }
+    }
+
+    addPathToTree(baseUrl, true);
+    cssUrls.forEach(url => addPathToTree(url));
+    jsUrls.forEach(url => addPathToTree(url));
+
+    renderTree(root, container);
 }
 
 async function processRawHtml(raw, baseUrl) {
     const bar = document.getElementById('progress-bar');
+    const percentText = document.getElementById('progress-percent');
     const loaderText = document.getElementById('loader-text');
     const isLocal = (baseUrl === "local-file" || baseUrl === "local-folder");
+
+    const updateProgress = (pct, text) => {
+        if (bar) bar.style.width = pct + '%';
+        if (percentText) percentText.innerText = pct + '%';
+        if (loaderText) loaderText.innerText = text;
+    };
+
     try {
-        bar.style.width = '40%';
-        loaderText.innerText = "リソースを解析中...";
+        updateProgress(10, "HTML構造を解析中...");
         const parser = new DOMParser();
         const docObj = parser.parseFromString(raw, "text/html");
-        let jsUrls = [], cssUrls = [];
+
+        let externalCssArr = [];
+        let externalJsArr = [];
+        let jsUrls = [];
+        let cssUrls = [];
+
         if (!isLocal) {
+            updateProgress(30, "外部リソースのURLを抽出中...");
             const scriptTags = Array.from(docObj.querySelectorAll('script[src]'));
             const styleTags = Array.from(docObj.querySelectorAll('link[rel="stylesheet"]'));
+
             jsUrls = [...new Set(scriptTags.map(tag => new URL(tag.getAttribute('src'), baseUrl).href))];
             cssUrls = [...new Set(styleTags.map(tag => new URL(tag.getAttribute('href'), baseUrl).href))];
+
+            updateProgress(50, "外部CSS/JSを取得中...");
+            const cssPromises = cssUrls.map(url => fetchViaGas(url).then(text => `/* --- External: ${url} --- */\n${text}`));
+            const jsPromises = jsUrls.map(url => fetchViaGas(url).then(text => `// --- External: ${url} ---\n${text}`));
+
+            externalCssArr = await Promise.all(cssPromises);
+            externalJsArr = await Promise.all(jsPromises);
+        } else {
+            updateProgress(50, "ローカルファイルをロード中...");
         }
-        const cssPromises = cssUrls.map(url => fetchViaGas(url).then(text => `/* --- External: ${url} --- */\n${text}`));
-        const jsPromises = jsUrls.map(url => fetchViaGas(url).then(text => `// --- External: ${url} ---\n${text}`));
-        const externalCssArr = await Promise.all(cssPromises);
-        const externalJsArr = await Promise.all(jsPromises);
-        bar.style.width = '70%';
-        loaderText.innerText = "エクスプローラーを構築中...";
-        buildExplorer(baseUrl, jsUrls, cssUrls);
+
+        updateProgress(70, "ファイルエクスプローラーを構築中...");
+        if (baseUrl === "local-folder") {
+            buildFolderExplorer();
+        } else {
+            buildExplorer(isLocal ? "UploadedFile" : baseUrl, jsUrls, cssUrls);
+        }
+
+        updateProgress(80, "ソースコードを整理中...");
         let inlineCss = [...raw.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(m => m[1]).join("\n\n");
         let inlineJs = [...raw.matchAll(/<script(?![^>]*src)[^>]*>([\s\S]*?)<\/script>/g)].map(m => m[1]).join("\n\n");
+
         siteData.all = raw;
         siteData.css = (externalCssArr.join("\n\n") || "/* 外部CSSなし */") + "\n\n/* --- Inline --- */\n\n" + inlineCss;
         siteData.js = (externalJsArr.join("\n\n") || "// 外部JSなし") + "\n\n/* --- Inline --- */\n\n" + inlineJs;
         siteData.html = raw.replace(/<style[^>]*>[\s\S]*?<\/style>/g, "").replace(/<script[^>]*>[\s\S]*?<\/script>/g, "");
+
         updateView();
         document.getElementById('landing-page').style.display = 'none';
         document.getElementById('main-tool').style.display = 'flex';
         document.body.className = "mode-tool";
+
+        updateProgress(90, "プレビュー画面をレンダリング中...");
         const frame = document.getElementById('previewFrame');
         const doc = frame.contentWindow.document;
         doc.open();
-        let previewHtml = isLocal ? raw : raw.replace('<head>', `<head><base href="${baseUrl}">`);
+
+        let previewHtml = "";
+        if (baseUrl === "local-folder") {
+            let previewDoc = parser.parseFromString(raw, "text/html");
+
+            previewDoc.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
+                const href = link.getAttribute('href');
+                const foundPath = Object.keys(folderFiles).find(path => path.endsWith(href));
+                if (foundPath) {
+                    const style = document.createElement('style');
+                    style.textContent = folderFiles[foundPath];
+                    link.replaceWith(style);
+                }
+            });
+
+            previewDoc.querySelectorAll('script[src]').forEach(script => {
+                const src = script.getAttribute('src');
+                const foundPath = Object.keys(folderFiles).find(path => path.endsWith(src));
+                if (foundPath) {
+                    const newScript = document.createElement('script');
+                    newScript.textContent = folderFiles[foundPath];
+                    script.replaceWith(newScript);
+                }
+            });
+            previewHtml = previewDoc.documentElement.innerHTML;
+        } else {
+            previewHtml = isLocal ? raw : raw.replace('<head>', `<head><base href="${baseUrl}">`);
+        }
+
         doc.write(previewHtml + '<script src="https://cdn.jsdelivr.net/npm/eruda"></script><script>eruda.init(); eruda.show();</script>');
         doc.close();
-        bar.style.width = '100%';
-        setTimeout(() => { document.getElementById('loader-overlay').style.display = 'none'; }, 400);
+
+        updateProgress(100, "準備が完了しました！");
+        setTimeout(() => {
+            document.getElementById('loader-overlay').style.display = 'none';
+        }, 500);
+
     } catch (e) {
+        console.error(e);
         alert("解析エラー: " + e.message);
         document.getElementById('loader-overlay').style.display = 'none';
     }
@@ -401,3 +572,94 @@ dropZone.addEventListener('drop', (e) => {
     e.preventDefault();
     const files = e.dataTransfer.files;
 });
+
+async function downloadAllFiles() {
+    const zip = new JSZip();
+    const isLocal = Object.keys(folderFiles).length > 0;
+
+    if (isLocal) {
+        for (const [path, content] of Object.entries(folderFiles)) {
+            zip.file(path, content);
+        }
+    } else {
+        const folder = zip.folder("site_source");
+        folder.file("index.html", siteData.html || siteData.all);
+        folder.file("style.css", siteData.css);
+        folder.file("script.js", siteData.js);
+    }
+
+    const blob = await zip.generateAsync({ type: "blob" });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = "source_viewer_export.zip";
+    link.click();
+}
+
+function buildFolderExplorer() {
+    const container = document.getElementById('tree-content');
+    if (!container) return;
+    container.innerHTML = "";
+
+    const paths = Object.keys(folderFiles);
+    const autoCollapse = paths.length > 10;
+
+    const root = { name: "Project", type: "folder", children: {}, open: true };
+
+    paths.forEach(path => {
+        const parts = path.split('/');
+        let cur = root;
+
+        parts.forEach((part, i) => {
+            const isFile = (i === parts.length - 1);
+            if (isFile) {
+                cur.children[part] = { name: part, type: "file", path: path };
+            } else {
+                if (!cur.children[part]) {
+                    cur.children[part] = { name: part, type: "folder", children: {}, open: !autoCollapse };
+                }
+                cur = cur.children[part];
+            }
+        });
+    });
+
+    renderTree(root, container);
+}
+
+function renderTree(node, parent) {
+    const item = document.createElement('div');
+    item.className = `tree-item ${node.type}`;
+
+    if (node.open) {
+        item.classList.add('open');
+    }
+
+    const icon = node.type === 'folder'
+        ? '<i class="fas fa-chevron-right arrow"></i><i class="fas fa-folder"></i>'
+        : '<i class="far fa-file-code"></i>';
+
+    item.innerHTML = `${icon} <span>${node.name}</span>`;
+    parent.appendChild(item);
+
+    if (node.type === 'folder') {
+        const childBox = document.createElement('div');
+        childBox.className = 'tree-children';
+
+        childBox.style.display = node.open ? 'block' : 'none';
+
+        item.onclick = (e) => {
+            e.stopPropagation();
+            const nowOpen = item.classList.toggle('open');
+            childBox.style.display = nowOpen ? 'block' : 'none';
+        };
+
+        Object.values(node.children).forEach(c => renderTree(c, childBox));
+        parent.appendChild(childBox);
+    } else {
+        item.onclick = (e) => {
+            e.stopPropagation();
+            document.querySelectorAll('.tree-item').forEach(el => el.classList.remove('active'));
+            item.classList.add('active');
+            renderCode(node.url || node.path, true);
+        };
+    }
+}
